@@ -39,7 +39,7 @@
   (-> var
       (select-keys [:name :line :arglists :doc :dynamic :added :deprecated :doc/format])
       (update-some :doc correct-indent)
-      (update-some :arglists second)
+      (update-some :arglists (fn [[q? :as arglists?]] (if (= 'quote q?) (second arglists?) arglists?)))
       (assoc-some  :file    (.getPath file)
                    :type    (var-type var)
                    :members (map (partial read-var file vars)
@@ -64,7 +64,9 @@
 
 (defn- read-file [path file]
   (try
-    (let [analysis (analyze-file (io/file path file))]
+    (let [analysis (binding [cljs.env/*compiler* (cljs.env/default-compiler-env)]
+                     (analyze-file (io/file path file))
+                     @cljs.env/*compiler*)]
       (apply merge
         (for [namespace (keys (::an/namespaces analysis))]
           {namespace

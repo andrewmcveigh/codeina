@@ -118,6 +118,7 @@
 
 (defn- namespace-hierarchy [namespaces]
   (->> (map :name namespaces)
+       (remove #{'cljs.core})
        (sort)
        (mapcat namespace-parts)
        (distinct)
